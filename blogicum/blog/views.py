@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404, render, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Count
@@ -6,10 +6,14 @@ from .models import Post, Category, Comment
 from django.core.paginator import Paginator
 from .forms import EditProfileForm, PostForm, CommentForm
 from django.core.mail import send_mail
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
+from django.utils.timezone import now
 
 def index(request):
-    posts = (Post.objects.filter(is_published=True).annotate(comment_count=Count('comments')).order_by('-pub_date'))
+    posts = (Post.objects.filter(is_published=True, pub_date__lte=now(),
+                                 category__is_published=True)
+             .annotate(comment_count=Count('comments'))
+             .order_by('-pub_date'))
 
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
@@ -26,7 +30,10 @@ def category_posts(request, category_slug):
                                  slug=category_slug,
                                  is_published=True)
 
-    posts = Post.objects.filter(category=category, is_published=True).annotate(comment_count=Count('comments')).order_by('-pub_date')
+    posts = (Post.objects.filter(category=category, is_published=True,
+                                 pub_date__lte=now())
+             .annotate(comment_count=Count('comments'))
+             .order_by('-pub_date'))
 
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
@@ -41,6 +48,10 @@ def category_posts(request, category_slug):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+
+    if not post.is_published and request.user != post.author:
+        raise Http404("Пост не найден или доступ запрещён.")
+
     form = CommentForm()
     comments = post.comments.all()
     return render(request, 'blog/detail.html', {
@@ -53,9 +64,18 @@ def post_detail(request, post_id):
 def profile(request, username):
     profile = get_object_or_404(User, username=username)
 
-    posts = (Post.objects.filter(author=profile, is_published=True)
-             .annotate(comment_count=Count('comments'))
-             .order_by('-pub_date'))
+    if request.user != profile:
+        posts = (Post.objects.filter(author=profile,
+                                     pub_date__lte=now(),
+                                     is_published=True)
+                 .annotate(comment_count=Count('comments'))
+                 .order_by('-pub_date'))
+    else:
+        posts = (Post.objects.filter(author=profile)
+                 .annotate(comment_count=Count('comments'))
+                 .order_by('-pub_date'))
+
+
 
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
@@ -95,20 +115,24 @@ def post_create(request):
     return render(request, 'blog/create.html', {"form": PostForm()})
 
 
-@login_required
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+
+    if not request.user.is_authenticated:
+        return redirect(f"{reverse('login')}?next=/posts/{post_id}/edit/")
+
     if request.user != post.author:
-        return redirect('blog:profile', username=request.user.username)
+        return redirect('blog:post_detail', post_id=post.id)
 
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
             form.save()
-            return redirect('blog:profile', username=request.user.username)
+            return redirect('blog:post_detail', post_id=post.id)
     else:
         form = PostForm(instance=post)
     return render(request, 'blog/create.html', {'form': form})
+
 
 
 @login_required
