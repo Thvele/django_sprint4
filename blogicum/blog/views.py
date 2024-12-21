@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.http import HttpResponse, Http404
 from django.utils.timezone import now
 
+
 def index(request):
     posts = (Post.objects.filter(is_published=True, pub_date__lte=now(),
                                  category__is_published=True)
@@ -75,8 +76,6 @@ def profile(request, username):
                  .annotate(comment_count=Count('comments'))
                  .order_by('-pub_date'))
 
-
-
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -111,7 +110,7 @@ def post_create(request):
             post.author = request.user
             post.save()
             return redirect('blog:profile', username=request.user.username)
-        
+
     return render(request, 'blog/create.html', {"form": PostForm()})
 
 
@@ -132,7 +131,6 @@ def post_edit(request, post_id):
     else:
         form = PostForm(instance=post)
     return render(request, 'blog/create.html', {'form': form})
-
 
 
 @login_required
@@ -177,7 +175,9 @@ def edit_comment(request, post_id, comment_id):
 
 @login_required
 def delete_comment(request, post_id, comment_id):
-    comment = get_object_or_404(Comment, id=comment_id, post_id=post_id, author=request.user)
+    comment = get_object_or_404(Comment, id=comment_id,
+                                post_id=post_id,
+                                author=request.user)
     if request.method == 'POST':
         comment.delete()
         return redirect('blog:post_detail', post_id=post_id)
@@ -192,4 +192,5 @@ def send_test_email(request):
         'from@example.com',
         ['to@example.com'],
     )
-    return HttpResponse('Тестовое письмо отправлено. Проверьте директорию sent_emails/.')
+    return HttpResponse('Тестовое письмо отправлено. '
+                        'Проверьте директорию sent_emails/.')
