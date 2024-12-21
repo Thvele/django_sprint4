@@ -73,7 +73,7 @@ def test_custom_err_handlers(client):
         "password_reset_confirm.html",
         "password_reset_done.html",
         "password_reset_form.html",
-        "registration.html",
+        "registration_form.html",
     }
     for template in auth_templates:
         try:
