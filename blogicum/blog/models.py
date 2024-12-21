@@ -53,14 +53,14 @@ class Post(models.Model):
                     '— можно делать отложенные публикации.')
     )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name=_('Автор публикации')
+        User, on_delete=models.CASCADE, verbose_name=_('Автор публикации'), related_name='posts'
     )
     location = models.ForeignKey(
         Location, on_delete=models.SET_NULL, null=True, blank=True,
         verbose_name=_('Местоположение')
     )
     category = models.ForeignKey(
-        Category, on_delete=models.SET_NULL, null=True, blank=False,
+        Category, on_delete=models.SET_NULL, null=True, blank=False, related_name='posts',
         verbose_name=_('Категория')
     )
     is_published = models.BooleanField(
@@ -76,6 +76,7 @@ class Post(models.Model):
     class Meta:
         verbose_name = _('публикация')
         verbose_name_plural = _('Публикации')
+        ordering = ['-pub_date', 'title']
 
     def __str__(self):
         return self.title

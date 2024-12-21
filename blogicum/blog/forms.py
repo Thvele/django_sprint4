@@ -12,8 +12,7 @@ class EditProfileForm(forms.ModelForm):
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'text', 'image', 'pub_date',
-                  'category', 'location', 'is_published']
+        exclude = ['author', 'created_at']
 
 
 class CommentForm(forms.ModelForm):
