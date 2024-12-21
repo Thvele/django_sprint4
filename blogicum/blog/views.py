@@ -1,16 +1,15 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db.models import Count
 from .models import Post, Category, Comment
 from django.core.paginator import Paginator
 from .forms import EditProfileForm, PostForm, CommentForm
 from django.core.mail import send_mail
 from django.http import HttpResponse
 
-
 def index(request):
-    posts = (Post.objects.filter(is_published=True)
-             .order_by('-pub_date'))
+    posts = (Post.objects.filter(is_published=True).annotate(comment_count=Count('comments')).order_by('-pub_date'))
 
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
@@ -27,7 +26,7 @@ def category_posts(request, category_slug):
                                  slug=category_slug,
                                  is_published=True)
 
-    posts = Post.objects.filter(category=category, is_published=True).order_by('-pub_date')
+    posts = Post.objects.filter(category=category, is_published=True).annotate(comment_count=Count('comments')).order_by('-pub_date')
 
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
@@ -37,7 +36,7 @@ def category_posts(request, category_slug):
         'category': category,
         'page_obj': page_obj,
     }
-    return render(request, 'blog/category_posts.html', context)
+    return render(request, 'blog/category.html', context)
 
 
 def post_detail(request, post_id):
@@ -55,6 +54,7 @@ def profile(request, username):
     profile = get_object_or_404(User, username=username)
 
     posts = (Post.objects.filter(author=profile, is_published=True)
+             .annotate(comment_count=Count('comments'))
              .order_by('-pub_date'))
 
     paginator = Paginator(posts, 10)
@@ -91,9 +91,8 @@ def post_create(request):
             post.author = request.user
             post.save()
             return redirect('blog:profile', username=request.user.username)
-    else:
-        form = PostForm()
-    return render(request, 'blog/create.html', {'form': form})
+        
+    return render(request, 'blog/create.html', {"form": PostForm()})
 
 
 @login_required

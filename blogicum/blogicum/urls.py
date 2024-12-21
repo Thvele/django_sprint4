@@ -20,6 +20,10 @@ from django.views.generic.edit import CreateView
 from django.conf import settings
 from django.conf.urls.static import static
 
+handler403 = "core.views.custom_handler403"
+handler404 = "core.views.custom_handler404"
+handler500 = "core.views.custom_handler500"
+
 urlpatterns = [
     path('', include('blog.urls')),
 
