@@ -68,6 +68,9 @@ class Post(models.Model):
         default=True,
         help_text=_('Снимите галочку, чтобы скрыть публикацию.')
     )
+    image = models.ImageField(
+        _('Изображение'), upload_to='posts/', null=True, blank=True
+    )
     created_at = models.DateTimeField(_('Добавлено'), auto_now_add=True)
 
     class Meta:
@@ -76,3 +79,23 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Comment(models.Model):
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name='comments',
+        verbose_name=_('Публикация')
+    )
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name=_('Автор комментария')
+    )
+    text = models.TextField(_('Текст комментария'))
+    created_at = models.DateTimeField(_('Дата создания'), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('комментарий')
+        verbose_name_plural = _('Комментарии')
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'Комментарий от {self.author} к {self.post}'
