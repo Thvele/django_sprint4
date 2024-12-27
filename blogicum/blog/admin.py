@@ -3,6 +3,7 @@ from .models import Category, Location, Post, Comment
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('title', 'is_published', 'created_at')

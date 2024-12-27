@@ -7,6 +7,7 @@ from .models import Post, Category, Comment
 from .forms import EditProfileForm, PostForm, CommentForm
 from .utils import get_posts_with_comments, paginate_queryset
 
+
 def index(request):
     posts = get_posts_with_comments()
     posts = posts.order_by('-pub_date')
@@ -17,6 +18,7 @@ def index(request):
         'page_obj': page_obj,
     }
     return render(request, 'blog/index.html', context)
+
 
 def category_posts(request, category_slug):
     category = get_object_or_404(
@@ -32,6 +34,7 @@ def category_posts(request, category_slug):
         'page_obj': page_obj,
     }
     return render(request, 'blog/category.html', context)
+
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -50,6 +53,7 @@ def post_detail(request, post_id):
         }
     )
 
+
 def profile(request, username):
     profile = get_object_or_404(User, username=username)
 
@@ -67,6 +71,7 @@ def profile(request, username):
     }
     return render(request, 'blog/profile.html', context)
 
+
 @login_required
 def edit_profile(request):
     form = EditProfileForm(request.POST or None, instance=request.user)
@@ -75,6 +80,7 @@ def edit_profile(request):
         return redirect('blog:profile', username=request.user.username)
 
     return render(request, 'blog/user.html', {'form': form})
+
 
 @login_required
 def post_create(request):
@@ -86,6 +92,7 @@ def post_create(request):
         return redirect('blog:profile', username=request.user.username)
 
     return render(request, 'blog/create.html', {"form": form})
+
 
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -103,12 +110,14 @@ def post_edit(request, post_id):
 
     return render(request, 'blog/create.html', {"form": form})
 
+
 @login_required
 def post_delete(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     if request.user == post.author:
         post.delete()
     return redirect('blog:profile', username=request.user.username)
+
 
 @login_required
 def add_comment(request, post_id):
@@ -126,6 +135,7 @@ def add_comment(request, post_id):
         'post': post
     })
 
+
 @login_required
 def edit_comment(request, post_id, comment_id):
     comment = get_object_or_404(
@@ -141,6 +151,7 @@ def edit_comment(request, post_id, comment_id):
         'comment': comment
     })
 
+
 @login_required
 def delete_comment(request, post_id, comment_id):
     comment = get_object_or_404(
@@ -154,6 +165,7 @@ def delete_comment(request, post_id, comment_id):
         'comment': comment,
         'post': comment.post
     })
+
 
 def send_test_email(request):
     send_mail(

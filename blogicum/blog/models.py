@@ -53,14 +53,16 @@ class Post(models.Model):
                     '— можно делать отложенные публикации.')
     )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name=_('Автор публикации'), related_name='posts'
+        User, on_delete=models.CASCADE, verbose_name=_('Автор публикации'),
+        related_name='posts'
     )
     location = models.ForeignKey(
         Location, on_delete=models.SET_NULL, null=True, blank=True,
         verbose_name=_('Местоположение')
     )
     category = models.ForeignKey(
-        Category, on_delete=models.SET_NULL, null=True, blank=False, related_name='posts',
+        Category, on_delete=models.SET_NULL, null=True, blank=False,
+        related_name='posts',
         verbose_name=_('Категория')
     )
     is_published = models.BooleanField(

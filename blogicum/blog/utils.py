@@ -3,6 +3,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.timezone import now
 from .models import Post
 
+
 def paginate_queryset(queryset, page_number, per_page=10):
     paginator = Paginator(queryset, per_page)
     try:
